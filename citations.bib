@@ -1,0 +1,229 @@
+@article{GSE152641,
+title = {Transcriptomic similarities and differences in host response between SARS-CoV-2 and other viral infections},
+journal = {iScience},
+volume = {24},
+number = {1},
+pages = {101947},
+year = {2021},
+issn = {2589-0042},
+doi = {https://doi.org/10.1016/j.isci.2020.101947},
+url = {https://www.sciencedirect.com/science/article/pii/S2589004220311445},
+author = {Simone A. Thair and Yudong D. He and Yehudit Hasin-Brumshtein and Suraj Sakaram and Rushika Pandya and Jiaying Toh and David Rawling and Melissa Remmel and Sabrina Coyle and George N. Dalekos and Ioannis Koutsodimitropoulos and Glykeria Vlachogianni and Eleni Gkeka and Eleni Karakike and Georgia Damoraki and Nikolaos Antonakos and Purvesh Khatri and Evangelos J. Giamarellos-Bourboulis and Timothy E. Sweeney},
+keywords = {Molecular Biology, Immunology: Bioinformatics, Transcriptomics},
+abstract = {Summary
+The pandemic 2019 novel coronavirus disease (COVID-19) shares certain clinical characteristics with other acute viral infections. We studied the whole-blood transcriptomic host response to severe acute respiratory syndrome coronavirus 2 (SARS-CoV-2) using RNAseq from 24 healthy controls and 62 prospectively enrolled patients with COVID-19. We then compared these data to non-COVID-19 viral infections, curated from 23 independent studies profiling 1,855 blood samples covering six viruses (influenza, respiratory syncytial virus (RSV), human rhinovirus (HRV), severe acute respiratory syndrome coronavirus 1 (SARS-CoV-1), Ebola, dengue). We show gene expression changes in COVID-19 versus non-COVID-19 viral infections are highly correlated (r = 0.74, p < 0.001). However, we also found 416 genes specific to COVID-19. Inspection of top genes revealed dynamic immune evasion and counter host responses specific to COVID-19. Statistical deconvolution of cell proportions maps many cell type proportions concordantly shifting. Discordantly increased in COVID-19 were CD56bright natural killer cells and M2 macrophages. The concordant and discordant responses mapped out here provide a window to explore the pathophysiology of the host response to SARS-CoV-2.}
+}
+
+
+@article{GEOquery,
+    author = {Davis, Sean and Meltzer, Paul S.},
+    title = "{GEOquery: a bridge between the Gene Expression Omnibus (GEO) and BioConductor}",
+    journal = {Bioinformatics},
+    volume = {23},
+    number = {14},
+    pages = {1846-1847},
+    year = {2007},
+    month = {05},
+    abstract = "{Microarray technology has become a standard molecular biology tool. Experimental data have been generated on a huge number of organisms, tissue types, treatment conditions and disease states. The Gene Expression Omnibus (Barrett et al., 2005), developed by the National Center for Bioinformatics (NCBI) at the National Institutes of Health is a repository of nearly 140 000 gene expression experiments. The BioConductor project (Gentleman et al., 2004) is an open-source and open-development software project built in the R statistical programming environment (R Development core Team, 2005) for the analysis and comprehension of genomic data. The tools contained in the BioConductor project represent many state-of-the-art methods for the analysis of microarray and genomics data. We have developed a software tool that allows access to the wealth of information within GEO directly from BioConductor, eliminating many the formatting and parsing problems that have made such analyses labor-intensive in the past. The software, called GEOquery, effectively establishes a bridge between GEO and BioConductor. Easy access to GEO data from BioConductor will likely lead to new analyses of GEO data using novel and rigorous statistical and bioinformatic tools. Facilitating analyses and meta-analyses of microarray data will increase the efficiency with which biologically important conclusions can be drawn from published genomic data.Availability: GEOquery is available as part of the BioConductor project.Contact:sdavis2@mail.nih.gov}",
+    issn = {1367-4803},
+    doi = {10.1093/bioinformatics/btm254},
+    url = {https://doi.org/10.1093/bioinformatics/btm254},
+    eprint = {https://academic.oup.com/bioinformatics/article-pdf/23/14/1846/469881/btm254.pdf},
+}
+
+
+@article{edgeR_1,
+    author = {Robinson, Mark D. and McCarthy, Davis J. and Smyth, Gordon K.},
+    title = "{edgeR: a Bioconductor package for differential expression analysis of digital gene expression data}",
+    journal = {Bioinformatics},
+    volume = {26},
+    number = {1},
+    pages = {139-140},
+    year = {2009},
+    month = {11},
+    abstract = "{Summary: It is expected that emerging digital gene expression (DGE) technologies will overtake microarray technologies in the near future for many functional genomics applications. One of the fundamental data analysis tasks, especially for gene expression studies, involves determining whether there is evidence that counts for a transcript or exon are significantly different across experimental conditions. edgeR is a Bioconductor software package for examining differential expression of replicated count data. An overdispersed Poisson model is used to account for both biological and technical variability. Empirical Bayes methods are used to moderate the degree of overdispersion across transcripts, improving the reliability of inference. The methodology can be used even with the most minimal levels of replication, provided at least one phenotype or experimental condition is replicated. The software may have other applications beyond sequencing data, such as proteome peptide count data.Availability: The package is freely available under the LGPL licence from the Bioconductor web site (http://bioconductor.org).Contact:mrobinson@wehi.edu.au}",
+    issn = {1367-4803},
+    doi = {10.1093/bioinformatics/btp616},
+    url = {https://doi.org/10.1093/bioinformatics/btp616},
+    eprint = {https://academic.oup.com/bioinformatics/article-pdf/26/1/139/443156/btp616.pdf},
+}
+
+
+@article{edgeR_2,
+    author = {McCarthy, Davis J. and Chen, Yunshun and Smyth, Gordon K.},
+    title = "{Differential expression analysis of multifactor RNA-Seq experiments with respect to biological variation}",
+    journal = {Nucleic Acids Research},
+    volume = {40},
+    number = {10},
+    pages = {4288-4297},
+    year = {2012},
+    month = {01},
+    abstract = "{A flexible statistical framework is developed for the analysis of read counts from RNA-Seq gene expression studies. It provides the ability to analyse complex experiments involving multiple treatment conditions and blocking variables while still taking full account of biological variation. Biological variation between RNA samples is estimated separately from the technical variation associated with sequencing technologies. Novel empirical Bayes methods allow each gene to have its own specific variability, even when there are relatively few biological replicates from which to estimate such variability. The pipeline is implemented in the edgeR package of the Bioconductor project. A case study analysis of carcinoma data demonstrates the ability of generalized linear model methods (GLMs) to detect differential expression in a paired design, and even to detect tumour-specific expression changes. The case study demonstrates the need to allow for gene-specific variability, rather than assuming a common dispersion across genes or a fixed relationship between abundance and variability. Genewise dispersions de-prioritize genes with inconsistent results and allow the main analysis to focus on changes that are consistent between biological replicates. Parallel computational approaches are developed to make non-linear model fitting faster and more reliable, making the application of GLMs to genomic data more convenient and practical. Simulations demonstrate the ability of adjusted profile likelihood estimators to return accurate estimators of biological variability in complex situations. When variation is gene-specific, empirical Bayes estimators provide an advantageous compromise between the extremes of assuming common dispersion or separate genewise dispersion. The methods developed here can also be applied to count data arising from DNA-Seq applications, including ChIP-Seq for epigenetic marks and DNA methylation analyses.}",
+    issn = {0305-1048},
+    doi = {10.1093/nar/gks042},
+    url = {https://doi.org/10.1093/nar/gks042},
+    eprint = {https://academic.oup.com/nar/article-pdf/40/10/4288/25335174/gks042.pdf},
+}
+
+@article{edgeR_protocol,
+  title={Count-based differential expression analysis of RNA sequencing data using R and Bioconductor},
+  author={Anders, Simon and McCarthy, Davis J and Chen, Yunshun and Okoniewski, Michal and Smyth, Gordon K and Huber, Wolfgang and Robinson, Mark D},
+  journal={Nature protocols},
+  volume={8},
+  number={9},
+  pages={1765},
+  year={2013},
+  publisher={Nature Publishing Group}
+}
+
+@article{gentleman2017annotate,
+  title={annotate: Annotation for microarrays},
+  author={Gentleman, R},
+  journal={R package version},
+  volume={1},
+  number={0},
+  pages={693},
+  year={2017}
+}
+
+
+@article{carlson2017org,
+  title={org. Hs. eg. db: Genome wide annotation for Human},
+  author={Carlson, Marc and Falcon, S and Pages, H and Li, N},
+  journal={R package version},
+  volume={3},
+  number={1},
+  year={2017}
+}
+
+@article{bcv,
+    author = {McCarthy, Davis J. and Chen, Yunshun and Smyth, Gordon K.},
+    title = "{Differential expression analysis of multifactor RNA-Seq experiments with respect to biological variation}",
+    journal = {Nucleic Acids Research},
+    volume = {40},
+    number = {10},
+    pages = {4288-4297},
+    year = {2012},
+    month = {01},
+    abstract = "{A flexible statistical framework is developed for the analysis of read counts from RNA-Seq gene expression studies. It provides the ability to analyse complex experiments involving multiple treatment conditions and blocking variables while still taking full account of biological variation. Biological variation between RNA samples is estimated separately from the technical variation associated with sequencing technologies. Novel empirical Bayes methods allow each gene to have its own specific variability, even when there are relatively few biological replicates from which to estimate such variability. The pipeline is implemented in the edgeR package of the Bioconductor project. A case study analysis of carcinoma data demonstrates the ability of generalized linear model methods (GLMs) to detect differential expression in a paired design, and even to detect tumour-specific expression changes. The case study demonstrates the need to allow for gene-specific variability, rather than assuming a common dispersion across genes or a fixed relationship between abundance and variability. Genewise dispersions de-prioritize genes with inconsistent results and allow the main analysis to focus on changes that are consistent between biological replicates. Parallel computational approaches are developed to make non-linear model fitting faster and more reliable, making the application of GLMs to genomic data more convenient and practical. Simulations demonstrate the ability of adjusted profile likelihood estimators to return accurate estimators of biological variability in complex situations. When variation is gene-specific, empirical Bayes estimators provide an advantageous compromise between the extremes of assuming common dispersion or separate genewise dispersion. The methods developed here can also be applied to count data arising from DNA-Seq applications, including ChIP-Seq for epigenetic marks and DNA methylation analyses.}",
+    issn = {0305-1048},
+    doi = {10.1093/nar/gks042},
+    url = {https://doi.org/10.1093/nar/gks042},
+    eprint = {https://academic.oup.com/nar/article-pdf/40/10/4288/25335174/gks042.pdf},
+}
+
+
+@article{complexheatmap,
+    author = {Gu, Zuguang and Eils, Roland and Schlesner, Matthias},
+    title = "{Complex heatmaps reveal patterns and correlations in multidimensional genomic data}",
+    journal = {Bioinformatics},
+    volume = {32},
+    number = {18},
+    pages = {2847-2849},
+    year = {2016},
+    month = {05},
+    abstract = "{Summary: Parallel heatmaps with carefully designed annotation graphics are powerful for efficient visualization of patterns and relationships among high dimensional genomic data. Here we present the ComplexHeatmap package that provides rich functionalities for customizing heatmaps, arranging multiple parallel heatmaps and including user-defined annotation graphics. We demonstrate the power of ComplexHeatmap to easily reveal patterns and correlations among multiple sources of information with four real-world datasets.Availability and Implementation: The ComplexHeatmap package and documentation are freely available from the Bioconductor project: http://www.bioconductor.org/packages/devel/bioc/html/ComplexHeatmap.html.Contact:m.schlesner@dkfz.deSupplementary information:Supplementary data are available at Bioinformatics online.}",
+    issn = {1367-4803},
+    doi = {10.1093/bioinformatics/btw313},
+    url = {https://doi.org/10.1093/bioinformatics/btw313},
+    eprint = {https://academic.oup.com/bioinformatics/article-pdf/32/18/2847/24406805/btw313.pdf},
+}
+
+
+@article{circlize,
+    author = {Gu, Zuguang and Gu, Lei and Eils, Roland and Schlesner, Matthias and Brors, Benedikt},
+    title = "{circlize implements and enhances circular visualization in R }",
+    journal = {Bioinformatics},
+    volume = {30},
+    number = {19},
+    pages = {2811-2812},
+    year = {2014},
+    month = {06},
+    abstract = "{Summary: Circular layout is an efficient way for the visualization of huge amounts of genomic information. Here we present the circlize package, which provides an implementation of circular layout generation in R as well as an enhancement of available software. The flexibility of this package is based on the usage of low-level graphics functions such that self-defined high-level graphics can be easily implemented by users for specific purposes. Together with the seamless connection between the powerful computational and visual environment in R, circlize gives users more convenience and freedom to design figures for better understanding genomic patterns behind multi-dimensional data. Availability and implementation:circlize is available at the Comprehensive R Archive Network (CRAN): http://cran.r-project.org/web/packages/circlize/Contact:b.brors@dkfz.deSupplementary information:Supplementary data are available at Bioinformatics online. }",
+    issn = {1367-4803},
+    doi = {10.1093/bioinformatics/btu393},
+    url = {https://doi.org/10.1093/bioinformatics/btu393},
+    eprint = {https://academic.oup.com/bioinformatics/article-pdf/30/19/2811/17143901/btu393.pdf},
+}
+
+
+@article{gprofiler,
+    author = {Raudvere, Uku and Kolberg, Liis and Kuzmin, Ivan and Arak, Tambet and Adler, Priit and Peterson, Hedi and Vilo, Jaak},
+    title = "{g:Profiler: a web server for functional enrichment analysis and conversions of gene lists (2019 update)}",
+    journal = {Nucleic Acids Research},
+    volume = {47},
+    number = {W1},
+    pages = {W191-W198},
+    year = {2019},
+    month = {05},
+    abstract = "{Biological data analysis often deals with lists of genes arising from various studies. The g:Profiler toolset is widely used for finding biological categories enriched in gene lists, conversions between gene identifiers and mappings to their orthologs. The mission of g:Profiler is to provide a reliable service based on up-to-date high quality data in a convenient manner across many evidence types, identifier spaces and organisms. g:Profiler relies on Ensembl as a primary data source and follows their quarterly release cycle while updating the other data sources simultaneously. The current update provides a better user experience due to a modern responsive web interface, standardised API and libraries. The results are delivered through an interactive and configurable web design. Results can be downloaded as publication ready visualisations or delimited text files. In the current update we have extended the support to 467 species and strains, including vertebrates, plants, fungi, insects and parasites. By supporting user uploaded custom GMT files, g:Profiler is now capable of analysing data from any organism. All past releases are maintained for reproducibility and transparency. The 2019 update introduces an extensive technical rewrite making the services faster and more flexible. g:Profiler is freely available at https://biit.cs.ut.ee/gprofiler.}",
+    issn = {0305-1048},
+    doi = {10.1093/nar/gkz369},
+    url = {https://doi.org/10.1093/nar/gkz369},
+    eprint = {https://academic.oup.com/nar/article-pdf/47/W1/W191/28879887/gkz369.pdf},
+}
+
+
+@article {Hadjadj718,
+	author = {Hadjadj, J{\'e}r{\^o}me and Yatim, Nader and Barnabei, Laura and Corneau, Aur{\'e}lien and Boussier, Jeremy and Smith, Nika{\"\i}a and P{\'e}r{\'e}, H{\'e}l{\`e}ne and Charbit, Bruno and Bondet, Vincent and Chenevier-Gobeaux, Camille and Breillat, Paul and Carlier, Nicolas and Gauzit, R{\'e}my and Morbieu, Caroline and P{\`e}ne, Fr{\'e}d{\'e}ric and Marin, Nathalie and Roche, Nicolas and Szwebel, Tali-Anne and Merkling, Sarah H. and Treluyer, Jean-Marc and Veyer, David and Mouthon, Luc and Blanc, Catherine and Tharaux, Pierre-Louis and Rozenberg, Flore and Fischer, Alain and Duffy, Darragh and Rieux-Laucat, Fr{\'e}d{\'e}ric and Kern{\'e}is, Solen and Terrier, Benjamin},
+	title = {Impaired type I interferon activity and inflammatory responses in severe COVID-19 patients},
+	volume = {369},
+	number = {6504},
+	pages = {718--724},
+	year = {2020},
+	doi = {10.1126/science.abc6027},
+	publisher = {American Association for the Advancement of Science},
+	abstract = {Interferons (IFNs) are central to antiviral immunity. Viral recognition elicits IFN production, which in turn triggers the transcription of IFN-stimulated genes (ISGs), which engage in various antiviral functions. Type I IFNs (IFN-α and IFN-β) are widely expressed and can result in immunopathology during viral infections. By contrast, type III IFN (IFN-λ) responses are primarily restricted to mucosal surfaces and are thought to confer antiviral protection without driving damaging proinflammatory responses. Accordingly, IFN-λ has been proposed as a therapeutic in coronavirus disease 2019 (COVID-19) and other such viral respiratory diseases (see the Perspective by Grajales-Reyes and Colonna). Broggi et al. report that COVID-19 patient morbidity correlates with the high expression of type I and III IFNs in the lung. Furthermore, IFN-λ secreted by dendritic cells in the lungs of mice exposed to synthetic viral RNA causes damage to the lung epithelium, which increases susceptibility to lethal bacterial superinfections. Similarly, using a mouse model of influenza infection, Major et al. found that IFN signaling (especially IFN-λ) hampers lung repair by inducing p53 and inhibiting epithelial proliferation and differentiation. Complicating this picture, Hadjadj et al. observed that peripheral blood immune cells from severe and critical COVID-19 patients have diminished type I IFN and enhanced proinflammatory interleukin-6{\textendash} and tumor necrosis factor-α{\textendash}fueled responses. This suggests that in contrast to local production, systemic production of IFNs may be beneficial. The results of this trio of studies suggest that the location, timing, and duration of IFN exposure are critical parameters underlying the success or failure of therapeutics for viral respiratory infections.Science, this issue p. 706, p. 712, p. 718; see also p. 626Coronavirus disease 2019 (COVID-19) is characterized by distinct patterns of disease progression that suggest diverse host immune responses. We performed an integrated immune analysis on a cohort of 50 COVID-19 patients with various disease severity. A distinct phenotype was observed in severe and critical patients, consisting of a highly impaired interferon (IFN) type I response (characterized by no IFN-β and low IFN-α production and activity), which was associated with a persistent blood viral load and an exacerbated inflammatory response. Inflammation was partially driven by the transcriptional factor nuclear factor{\textendash}κB and characterized by increased tumor necrosis factor{\textendash}α and interleukin-6 production and signaling. These data suggest that type I IFN deficiency in the blood could be a hallmark of severe COVID-19 and provide a rationale for combined therapeutic approaches.},
+	issn = {0036-8075},
+	URL = {https://science.sciencemag.org/content/369/6504/718},
+	eprint = {https://science.sciencemag.org/content/369/6504/718.full.pdf},
+	journal = {Science}
+}
+
+
+@article{anurag2020,
+title = {Differential white blood cell count in the COVID-19: A cross-sectional study of 148 patients},
+journal = {Diabetes & Metabolic Syndrome: Clinical Research & Reviews},
+volume = {14},
+number = {6},
+pages = {2099-2102},
+year = {2020},
+issn = {1871-4021},
+doi = {https://doi.org/10.1016/j.dsx.2020.10.029},
+url = {https://www.sciencedirect.com/science/article/pii/S1871402120304604},
+author = {Aditya Anurag and Prakash Kumar Jha and Abhishek Kumar},
+keywords = {COVID-19, DLC, NLR, Diabetes, Hypertension},
+abstract = {Background
+SARS-CoV-2 infection alters various blood parameters, which may indicate disease severity and thus help in better clinical management.
+Aim
+To study the association between various hematological parameters and disease severity of COVID-19. To analyze the effects of hypertension and diabetes on neutrophil-lymphocyte ratio and neutrophil-monocyte ratio in patients suffering from COVID-19.
+Materials and methods
+The study was a cross-sectional study involving 148 laboratory-confirmed cases of SARS-CoV-2 infection. The patients were divided into three groups on the basis of disease severity. Various hematological parameters were analyzed. The effects of hypertension and diabetes on NLR and NMR in COVID-19 patients were evaluated.
+Results
+Of the 148 patients, 78.4%, 8.1% and 13.5% cases were in the mild, moderate and severe groups, respectively. Mean age was 42.63 ± 16.04 years (IQR: 29, 54.75; Range: 7–74). 58.8% patients were male while the rest (42.2%) were female. Mean TLC (cells/mm3), neutrophil (%), lymphocyte (%), monocyte (%), eosinophil (%), neutrophil-lymphocyte ratio (NLR) and neutrophil-monocyte ratio (NMR) among mild, moderate and severe COVID-19 was statistically significant (p < 0.05). Basophil (%) and lymphocyte-monocyte ratio (LMR) was statistically insignificant among the three groups. Lymphocyte (%), monocyte (%) and eosinophil (%) were negatively correlated to disease severity. Among diabetics, both NLR and NMR were statistically significant (p < 0.05). However, among hypertensive cases, only the NLR was statistically significant.
+Conclusion
+Older age, higher TLC, neutrophilia, lymphopenia, eosinopenia, high NLR and high NMR are associated with severe COVID-19. High NLR and high NMR are indicative of severe disease among diabetic patients. High NLR also indicates severe disease among hypertensive patients.}
+}
+
+@ARTICLE{hyper_Tcell,
+  
+AUTHOR={Kalfaoglu, Bahire and Almeida-Santos, José and Tye, Chanidapa Adele and Satou, Yorifumi and Ono, Masahiro},   
+	 
+TITLE={T-Cell Hyperactivation and Paralysis in Severe COVID-19 Infection Revealed by Single-Cell Analysis},      
+	
+JOURNAL={Frontiers in Immunology},      
+	
+VOLUME={11},      
+
+PAGES={2605},     
+	
+YEAR={2020},      
+	  
+URL={https://www.frontiersin.org/article/10.3389/fimmu.2020.589380},       
+	
+DOI={10.3389/fimmu.2020.589380},      
+	
+ISSN={1664-3224},   
+   
+ABSTRACT={Severe COVID-19 patients show various immunological abnormalities including T-cell reduction and cytokine release syndrome, which can be fatal and is a major concern of the pandemic. However, it is poorly understood how T-cell dysregulation can contribute to the pathogenesis of severe COVID-19. Here we show single cell-level mechanisms for T-cell dysregulation in severe COVID-19, demonstrating new pathogenetic mechanisms of T-cell activation and differentiation underlying severe COVID-19. By in silico sorting CD4+ T-cells from a single cell RNA-seq dataset, we found that CD4+ T-cells were highly activated and showed unique differentiation pathways in the lung of severe COVID-19 patients. Notably, those T-cells in severe COVID-19 patients highly expressed immunoregulatory receptors and CD25, whilst repressing the expression of FOXP3. Furthermore, we show that CD25<sup>+</sup> hyperactivated T-cells differentiate into multiple helper T-cell lineages, showing multifaceted effector T-cells with Th1 and Th2 characteristics. Lastly, we show that CD25-expressing hyperactivated T-cells produce the protease Furin, which facilitates the viral entry of SARS-CoV-2. Collectively, CD4<sup>+</sup> T-cells from severe COVID-19 patients are hyperactivated and FOXP3-mediated negative feedback mechanisms are impaired in the lung, which may promote immunopathology. Therefore, our study proposes a new model of T-cell hyperactivation and paralysis that drives immunopathology in severe COVID-19.}
+}
