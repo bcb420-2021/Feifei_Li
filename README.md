@@ -17,11 +17,11 @@ The html doesn't render in github...you might need to download it to view the co
 
 ### Before you compile...
 
-In the YAML metadata of 'A3_Feifei_Li.Rmd':
+In the YAML metadata of `A3_Feifei_Li.Rmd`:
 
-* Change 'isWindows' to 'FALSE' if you are not compiling on a host machine running Windows OS.
-* Change 'host_machine_dir' to the directory where you pull this repository. e.g.
+* Change `isWindows` to `FALSE` if you are not compiling on a host machine running Windows OS.
+* Change `host_machine_dir` to the directory where you pull this repository. e.g.
 ** Windows OS:
 ** MacOS/Linus:
 
-Generated plots will be stored under './img/' directory. You might delete the directory once the compilation is complete.
+Generated plots will be stored under `./img/` directory. You might delete the directory once the compilation is complete.
