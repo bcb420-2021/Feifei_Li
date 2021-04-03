@@ -13,11 +13,11 @@ The html doesn't render in github...you might need to download it to view the co
 
 [A2 Compiled html](https://raw.githubusercontent.com/bcb420-2021/Feifei_Li/main/A2_Feifei_Li.html)
 
-## A3
+## Assignment 3
 
 ### Before you compile...
 
-In the YAML:
+In the YAML metadata of 'A3_Feifei_Li.Rmd':
 
 * Change 'isWindows' to 'FALSE' if you are not compiling on a host machine running Windows OS.
 * Change 'host_machine_dir' to the directory where you pull this repository. e.g.
