@@ -20,8 +20,10 @@ The html doesn't render in github...you might need to download it to view the co
 In the YAML metadata of `A3_Feifei_Li.Rmd`:
 
 * Change `isWindows` to `FALSE` if you are not compiling on a host machine running Windows OS.
+* Change `isBeta` according to your version of EnrichmentMap app:
+  * `TRUE` for 3.3.2 or higher, `FALSE` for version below 3.3.2
 * Change `host_machine_dir` to the directory where you pull this repository. e.g.
-** Windows OS:
-** MacOS/Linus:
+  * Windows OS: `C:\\<path_to_repo>\\Feifei_Li`
+  * MacOS/Linux: `/Users/<your username>/Feifei_Li`
 
 Generated plots will be stored under `./img/` directory. You might delete the directory once the compilation is complete.
