@@ -14,10 +14,11 @@
 
 # ====  PACKAGES  ==============================================================
 # Dependency for ComplexHeatmap
-if (!requireNamespace("BiocManager", quietly = TRUE))
+if (!requireNamespace("BiocManager", quietly = TRUE)) {
     install.packages("BiocManager")
     BiocManager::install(version = "3.11", # release version is optional here
                          ask     = FALSE)
+}
 # For ploting heatmap ==========================================================
 if (!requireNamespace("ComplexHeatmap", quietly = TRUE))
     BiocManager::install("ComplexHeatmap")
