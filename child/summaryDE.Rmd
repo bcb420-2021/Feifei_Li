@@ -1,0 +1,78 @@
+---
+title: "Differential Expression Analysis Summary"
+author: "Feifei Li"
+date: "`r Sys.Date()`"
+output:
+    html_document:
+        df_print: paged
+---
+\newcommand{\fdr}{\mathrm{FDR}}
+
+
+```{r, include=FALSE}
+source("../scripts/diff_expr_qlf.R", chdir = TRUE, local = knitr::knit_global())
+source("../utils/plotters.R", chdir = TRUE, local = knitr::knit_global())
+```
+
+Since we hypothesized that COVID-19 status of samples was the only factor contributing to differential gene expression, we modeled on **group** (COVID-19 or HC). By fitting this model and the normalised RNA-seq data to a Quasi-Likelihood(QL) negative binomial (NB) generalised log-linear model using edgeR[@edgeR_1][@edgeR_2], the QL dispersion was estimated, which suggests the level at which the COVID-19 status of a sample can account for the sample's expression levels of the genes.
+The fitted result was then used to conduct genewise QL F-test for the coefficients of our two groups of samples. Below is the result of the QL F-test showing the number of genes that passed the significant threshold $p < 0.05$, and genes that passed that the threshold $0.05$ for Benjamini-Hochberg FDR-correction:
+
+```{r, echo=FALSE}
+knitr::kable(data.frame(
+    "Number of genes with p-value < 0.05"        = length(
+        which(
+            qlf_output_hits$table$PValue < 0.05
+            )
+        ),
+    "Number of genes that pass after correction" = length(
+        which(
+            qlf_output_hits$table$FDR < 0.05
+        )
+    ),
+    check.names                                  = FALSE
+))
+```
+
+
+This threshold for evidence of differential expression was chosen because we would like to capture the genes that only have less 5% chance to show such differences in expression between groups if they were non-differentially expressed genes.
+The false discovery rate (FDR/Benjamini-Hochberg) method was applied because we need to control for the the likelihood of false positive results that would increase by chance with the increasing number of tests performed. The threshold for the corrected p-value (FDR) was $<0.05$, as genes that have false positive results for fewer than 5% of the significant tests are of interest.
+
+
+```{r, warning=FALSE, message=FALSE, echo=FALSE}
+qlf_volcano <- data.frame(
+    gene             = entrez_to_gname[rownames(qlf_output_hits$table)],
+    log2FC           = qlf_output_hits$table$logFC,
+    neg_log10P       = -log10(qlf_output_hits$table$FDR)
+)
+plotVolcano(
+    df               = qlf_volcano,
+    title            = "QL F-test Results for 14425 Genes (HC vs COVID-19)",
+    gene_of_interest = c("ACO1", "ATL3", "ZC3H13")
+)
+```
+
+
+A Volcano plot was chosen over an MA plot to show the amount of differentially expressed genes because a volcano plot can answer such questions as how many genes that passed the correction are up-regulated or are down-regulated, while an MA plot fails to visualise the association between the results of multiple hypotheses testing and differential expression. Note that the p-value used for the volcano plot is the FDR-corrected p-values.
+Two genes of interest: **ACO1** and **ATL3** were highlighted. These two genes were identified by the original study to be the most important **COVID-19 signature genes**. Thair .et al discovered that ACO1 and ATL3 are completely oppositely regulated between COVID-19 patients and non-COVID-19 patients; ACO1 is up-regulated in COVID-19 patients and down-regulated in patients with non-COVID-19 viral infections, while ATL3 is down-regulated in COVID-19 patients and up-regulated in non-COVID-19 patients. The authors also found that **ZC3H13** is the most down-regulated genes among the COVID-19 signature genes.[@GSE152641] The position on our volcano plot reflect that the result of our differential expression analysis by QLM coincides with this observation made by Thair .et al; ACO1 is down-regulated while ATL3 is up-regulated in the healthy control.
+
+```{r, warning=FALSE, message=FALSE, echo=FALSE}
+plotHeatMap(tophits = tophits_qlf,
+            m       = gene_counts_norm,
+            samples = samples_by_group,
+            title   = "Expression Levels of QLF Top-hit Genes")
+```
+
+The heatmap plotted from the top-hit genes ($FDR < 0.05$) from the differential expression analysis exhibits clusters of up-regulated and down-regulated expressions between the two group. Below is a table presenting how many significant differentially expressed genes are up-regulated and how many down-regulated:
+```{r tophit_overview, warning=FALSE, message=FALSE, echo=FALSE}
+knitr::kable(data.frame(
+    "Upregulated top-hit genes"     = length(which(
+        qlf_output_hits$table$FDR   < 0.05 &
+        qlf_output_hits$table$logFC > 0
+    )),
+    "Downregulated top-hit genes"   = length(which(
+        qlf_output_hits$table$FDR   < 0.05 &
+        qlf_output_hits$table$logFC < 0
+    )),
+    check.names                     = F
+))
+```
