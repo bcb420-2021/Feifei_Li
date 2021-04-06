@@ -14,7 +14,7 @@
 #     edgeR
 #
 # ToDo: 
-# Notes: This script only functions properly with Bioconductor version 3.11!
+# Notes: The result is reproducible only under Bioconductor version 3.11!
 #
 # ==============================================================================
 
@@ -22,15 +22,18 @@
 # ====  PARAMETERS  ============================================================
 
 SERIES <- "GSE152641"
+options(timeout = 900)
 
 # ====  PACKAGES  ==============================================================
 # Check that required packages have been installed. Install if needed.
 
-# Run it if Bioconductor is not installed or version is not 3.11
-# if (!requireNamespace("BiocManager", quietly = TRUE))
-#     install.packages("BiocManager")
-# BiocManager::install(version = "3.11",
-#                      ask     = FALSE)
+# Run it if Bioconductor is not installed
+if (!requireNamespace("BiocManager", quietly = TRUE)){
+    install.packages("BiocManager")
+    BiocManager::install(version = "3.11", ask = FALSE)
+} else if (BiocManager::version() != "3.11") {
+    BiocManager::install(version = "3.11", ask = FALSE)
+}
 # For downloading data file ====================================================
 if (!requireNamespace("GEOquery", quietly = TRUE))
     BiocManager::install("GEOquery", ask = FALSE)
@@ -48,22 +51,22 @@ if (!requireNamespace("edgeR", quietly = TRUE))
 
 # ====  PROCESS  ===============================================================
 # Where we put all the data files in ===========================================
-if(!dir.exists("./data")) {
-    dir.create("./data", showWarnings = FALSE)
+if(!dir.exists("../data")) {
+    dir.create("../data", showWarnings = FALSE)
 }
 # Get file name from GEOdb =====================================================
 fname <- GEOquery::getGEOSuppFiles(GEO           = SERIES,
                                    fetch_files   = FALSE,
                                    makeDirectory = FALSE)$fname
 # Download dataset if it doesn't exist in the working directory ================
-if (!file.exists(file.path(getwd(), "data", fname))) {
+if (!file.exists(file.path("..", "data", fname))) {
     GEOquery::getGEOSuppFiles(GEO           = SERIES,
-                              baseDir       = "./data",
+                              baseDir       = "../data",
                               makeDirectory = FALSE)
 }
 # Read in data file ============================================================
 gene_counts <- read.csv(
-    file        = file.path(getwd(), "data", fname),
+    file        = file.path("..", "data", fname),
     header      = TRUE,
     check.names = FALSE
 )
@@ -101,5 +104,16 @@ entrez_to_gname <- annotate::getSYMBOL(
 # Manually label the unmapped gene with updated its HGNC symbol
 entrez_to_gname["285464"] <- "CRIPAK"
 rownames(gene_counts_norm) <- entrez_to_gname[rownames(gene_counts_norm)]
+# Generate normalised expression file ==========================================
+gene_counts_norm_df <- data.frame(gene = rownames(gene_counts_norm),
+                                  gene_counts_norm)
+if (!file.exists(file.path("..", "data", "Covid19_vs_HC_expr.txt"))) {
+    write.table(x         = gene_counts_norm_df,
+                file      = file.path("..", "data", "Covid19_vs_HC_expr.txt"),
+                sep       = "\t",
+                row.names = F,
+                col.names = T,
+                quote     = F)
+}
 
 # [END]
