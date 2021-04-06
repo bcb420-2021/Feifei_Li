@@ -76,9 +76,9 @@ if (!file.exists(file.path(getwd(), "data", "covid19_ranked_genelist.rnk"))) {
 }
 rnk_file <- file.path(getwd(), "data", "covid19_ranked_genelist.rnk")
 ```
-<!-- \newcommand{\sgn}{\operatorname{sgn}} -->
-<!-- \newcommand{\fdr}{\mathrm{FDR}} -->
-<!-- \newcommand{\fc}{\mathrm{FC}} -->
+\newcommand{\sgn}{\operatorname{sgn}}
+\newcommand{\fdr}{\mathrm{FDR}}
+\newcommand{\fc}{\mathrm{FC}}
 
 We defined the rank to be $-\log_{10}{\fdr} \ \cdot\ \sgn(\log{\fc})$. With the $-\log_{10}{\fdr}$, the samller the (corrected) p-value for a gene is, the higher the rank of that gene, regardless of whether it is up- or downregulated. The other term $\sgn(\log{\fc})$ take into account the factor of regulation of gene expression:
 if it is up-regulated, then it will be ranked from the top;
