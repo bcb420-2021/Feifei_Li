@@ -1,0 +1,92 @@
+---
+title: "Thresholded ORA Summary"
+author: "Feifei Li"
+date: "`r Sys.Date()`"
+output:
+    html_document:
+        df_print: paged
+---
+
+```{r, include=FALSE}
+source("../scripts/diff_expr_qlf.R", chdir = TRUE, local = knitr::knit_global())
+source("../utils/gprofiler_wrapper.R",
+       chdir = TRUE,
+       local = knitr::knit_global())
+```
+
+Three thresholded ORA's on all the top-hit differentially expressed genes, the up-regulated top-hits, and the down-regulated top-hots from the **QLF** result, were performed respectively using [g:Profiler](https://cran.r-project.org/web/packages/gprofiler2/vignettes/gprofiler2.html)[@gprofiler].
+
+
+Since this is a pathway analysis, we are only interested in data sources for biological pathways. Hence, **Reactome**, **Wikipathways**, and **KEGG** were used as our annotation data sources. We will also include **GO:Biological process (GO:BP)** as our data source. Although a biological process is different from a pathway; however, pathways are considered to collectively participate in biological processes. Therefore, GO:BP was too included.
+The databases used by the current release of g:Profiler are *Ensembl 102*, which is also the current version of GO database, and *Ensembl Genomes 49*.
+The currect release of Reactome used is *version 75*. Wikipathways is a comunity-maintained database and is being constantly updated. The current release of KEGG used is *97.0*.
+
+The p-value threshold for the significance of the gene-set enrichment of the Fisher's exact test calculated by g:Profiler was set to $0.05$. The numbers of genesets that were returned with this threshold by each query would be presented as a summary below. Benjamini–Hochberg FDR for p-value adjustment method was chosen, and IEA-annotated results (Inferred from Electronic Annotation) were excluded since the human-curated results are desirable for our first analysis.
+
+
+We first performed a thresholded ORA on *all* the QLF significant genes. Below is a table summary of its g:Profiler query result:
+```{r gost_all, message=FALSE, warning=FALSE, echo=FALSE}
+gostres_tophits <- gostQuery(genelist = tophits_qlf)
+knitr::kable(summariseGost(gostres = gostres_tophits))
+```
+
+
+An interactive Manhattan plot combining the results of different annotation sources:
+```{r, warning=FALSE, message=FALSE, echo=FALSE}
+gprofiler2::gostplot(gostres = gostres_tophits)
+```
+
+As for the detailed query result, however, there were too many pathways to check. Since GO terms are propagated,
+there might be terms that are too board and not so informative.
+Hence we limited the term size to fewer than 1000 genes and
+only examined those that passed p-value threshold for FDR correction.
+
+
+An ORA was the performed on the up-regulated significant differentially expressed genes:
+```{r gost_up, message=FALSE, warning=FALSE, echo=FALSE}
+gostres_up <- gostQuery(genelist = upregulated_genes)
+knitr::kable(summariseGost(gostres = gostres_up))
+```
+
+
+An interactive Manhattan plot that summarises the query result of the up-regulated top-hits:
+```{r, warning=FALSE, message=FALSE, echo=FALSE}
+gprofiler2::gostplot(gostres = gostres_up)
+```
+
+
+Summaries of the ORA result for the down-regulated genes:
+```{r gost_down, message=FALSE, warning=FALSE, echo=FALSE}
+gostres_down <- gostQuery(genelist = downregulated_genes)
+knitr::kable(summariseGost(gostres = gostres_down))
+```
+
+```{r, warning=FALSE, message=FALSE, echo=FALSE}
+gprofiler2::gostplot(gostres = gostres_down)
+```
+
+The result of the ORA using all the significant differentially expressed genes was compared against the other two using the up-regulated set and the down-regulated set in terms of the pathways returned from each source of annotation data.
+The number of gene sets returned appears to be proportional to the length of the query gene list. All these three results using three different gene lists reveal different information.
+In terms of GO biological processes, the result for all differentially expressed genes involve regulation of *neutrophil*, *leukocyte*, and *myeloid cells*. The result for up-regulated genes does not seem to have many informative GO terms except for viral gene expression and viral transcription. The result for the down-regulated genes has terms involve *type I interferon* and defense response to virus.
+In terms of REACTOME, pathways involving *neutrophil* regulation and *myeloid leukocyte* also appear in the result for all differentially expressed genes. The result for the up-regulated genes does not seem to have many informative terms either. The result for the down-regulated genes also shows signaling pathways for *interferon*.
+In terms of wikipathways, the results for all differentially expressed genes shows *T-Cell antigen Receptor (TCR) Signaling Pathway* and *Type II interferon signaling (IFN)*; pathways involving type I interferon appear too. The result for the up-regulated genes also have pathways involving *TCR*. The result for the down-regulated genes is similar to the previous two sources, showing pathways involving *Type I interferon* and *Type II interferon*.
+In terms of KEGG, the result for all differentially expressed genes has "Coronavirus disease - COVID-19" has the top hit pathway, expected but not informative; many cancer-relative pathways also appear. The result for the up-regulated genes shows a pathway involving TCR. The KEGG pathways for the down-regulated genes are mostly cancer-related.
+
+The ORA results highly support the conclusions drawn in the original paper.
+The authors also found pathways such as neutrophil activation, innate immune response,
+immune response to viral infection, type-I interferon signaling,
+and cytokine production for 771 upregulated genes they discovered in COVID-19 patients;
+pathways they found for 1231 down-regulated genes include
+lymphocyte differentiation and T-cell activation and regulation,
+which also appear in our ORA result. The authors concluded that
+T-cell are suppressed while neutrophils are activated as
+an indicator of host response to COVID-19 represented in the transcriptomic changes.[@GSE152641]
+
+There have been prior researches on host immune responses to COVID-19 showing findings that support these ORA results.
+An immune analysis on COVID-19 patients by Hadjadj et al. has shown findings that coincide with our ORA result.
+Their multiplex gene expression analysis showed
+an up-regulation of genes involved in type I interferon signaling in COVID-19 patients[@Hadjadj718],
+while pathways involving type I interferon are present in our ORA results for down-regulated genes in healthy control.
+Anurag et al. observed increased total leukocyte count and differential neutrophil count in patients with severe COVID-19 infection[@anurag2020],
+and GO terms *leukocyte activation involved in immune response* and *neutrophil activation involved in immune response* are present in the ORA result for all differentially expressed genes.
+Kalfaoglu B. et al. discovered a unique dynamics of T-cells in severe COVID-19 patients: T-cells become hyperactivated, proliferate and die rapidly before differentiating into Treg, while they have shown that the majority of Treg-type genes are regulated by TCR signaling[@hyper_Tcell]; this supports the involvement of T-cell signaling pathways in our ORA result.
