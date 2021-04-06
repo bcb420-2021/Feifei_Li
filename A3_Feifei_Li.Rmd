@@ -1,0 +1,648 @@
+---
+title: "Data set Pathway and Network Analysis"
+author: "Feifei Li"
+date: "`r Sys.Date()`"
+output:
+    html_document:
+        df_print: paged
+        toc: TRUE
+        toc_depth: 2
+        toc_float:
+            collapsed: FALSE
+            smooth_scroll: TRUE
+        number_sections: TRUE
+params:
+    analysis_name: Covid19_vs_HC
+    gsea_jar: /home/rstudio/GSEA_4.1.0/gsea-cli.sh
+    gsea_directory: ''
+    fdr_thresh: 0.25
+    pval_thresh: 0.05
+    java_ver: 11
+    runGSEA: FALSE
+    isDocker: TRUE
+    isWindows: TRUE
+    hasEM: TRUE
+    isBetaEM: FALSE
+    host_machine_dir: E:\\BCB420\\GitHub_repo\\Feifei_Li
+bibliography: citations.bib
+csl: biomed-central.csl
+---
+
+# Introduction
+
+## Dataset used
+```{r, child='child/intro_data.Rmd'}
+```
+
+## Differential Expression Analysis
+```{r, child='child/summaryDE.Rmd'}
+```
+
+## Thresholded ORA Result
+```{r, child='child/summaryORA.Rmd'}
+```
+
+# Preparation
+
+## Load differential expression analysis result
+
+```{r, warning=FALSE, message=FALSE}
+source("./scripts/diff_expr_qlf.R", chdir = TRUE, local = knitr::knit_global())
+```
+```{r, include=FALSE}
+BiocManager::install(version = "3.12", ask = FALSE)
+```
+
+
+## Non-thresholded Ranked Gene list
+
+Create a non-thresholded gene list ranked by $-\log_{10}{\fdr} \ \cdot\ \sgn(\log{\fc})$:
+```{r rank_list, warning=FALSE, message=FALSE}
+if (!file.exists(file.path(getwd(), "data", "covid19_ranked_genelist.rnk"))) {
+    gene_rank <- data.frame(
+        genename = entrez_to_gname[rownames(qlf_output_hits$table)],
+        F_stat   = -log(qlf_output_hits$table$FDR,
+                        base = 10) * sign(qlf_output_hits$table$logFC)
+    )
+    gene_rank <- gene_rank[order(gene_rank$F_stat), ]
+    write.table(x         = gene_rank,
+                file      = file.path(getwd(),
+                                      "data",
+                                      "covid19_ranked_genelist.rnk"),
+                sep       = "\t",
+                row.names = F,
+                col.names = F,
+                quote     = F)
+}
+rnk_file <- file.path(getwd(), "data", "covid19_ranked_genelist.rnk")
+```
+<!-- \newcommand{\sgn}{\operatorname{sgn}} -->
+<!-- \newcommand{\fdr}{\mathrm{FDR}} -->
+<!-- \newcommand{\fc}{\mathrm{FC}} -->
+
+We defined the rank to be $-\log_{10}{\fdr} \ \cdot\ \sgn(\log{\fc})$. With the $-\log_{10}{\fdr}$, the samller the (corrected) p-value for a gene is, the higher the rank of that gene, regardless of whether it is up- or downregulated. The other term $\sgn(\log{\fc})$ take into account the factor of regulation of gene expression:
+if it is up-regulated, then it will be ranked from the top;
+if it is down-regulated, then it will be ranked from the bottom.
+Thereby we have genes that show the most statistically significant evidence of differential expression at the top for those upregulated, and the bottom of the list for those downregulated, while genes in the middle are least significant.
+
+## Required R Packages
+
+[<tt>RCurl</tt>](https://cran.r-project.org/web/packages/RCurl/index.html) is required to download annotation data sets from Bader Lab:
+```{r, warning=FALSE, message=FALSE}
+if (! requireNamespace("RCurl", quietly=TRUE)) {
+    install.packages("RCurl")
+}
+```
+
+[<tt>htmltools</tt>](https://github.com/rstudio/htmltools) is required to render local images in html:
+```{r, warning=FALSE, message=FALSE}
+if (! requireNamespace("htmltools", quietly = TRUE))
+    install.packages("htmltools")
+```
+
+<tt>Rcy3</tt>[@rcy3] is required to automate Cytoscape from R:
+```{r, warning=FALSE, message=FALSE}
+if (! requireNamespace("Rcy3", quietly=TRUE)) {
+    BiocManager::install("RCy3")
+}
+```
+
+
+## Geneset Source
+
+Download the gene sets for enrichment analysis from Bader Lab:
+```{r, warning=FALSE, message=FALSE}
+gmt_url   <- "http://download.baderlab.org/EM_Genesets/current_release/Human/symbol/"
+# list all the files on the server
+filenames <- RCurl::getURL(gmt_url)
+tc        <- textConnection(filenames)
+contents  <- readLines(tc)
+close(tc)
+# get the gmt that has all the pathways and excludes terms inferred from
+# electronic annotations(IEA) start with gmt file that has pathways only
+rx <- gregexpr("(?<=<a href=\")(.*.GOBP_AllPathways_no_GO_iea.*.)(.gmt)(?=\">)",
+               contents, 
+               perl = TRUE)
+gmt_fname      <- unlist(regmatches(contents, rx))
+gmt_file_path  <- file.path(getwd(), "data", gmt_fname)
+if (!file.exists(gmt_file_path)) # Download the latest genesets if not existed
+    download.file(paste(gmt_url, gmt_fname, sep = ""), destfile = gmt_file_path)
+```
+
+
+# Non-thresholded Gene set Enrichment Analysis
+
+## Run GSEA on the Ranked Gene list
+
+Initialising GSEA parameters:
+```{r}
+gsea_jar         <- params$gsea_jar
+java_ver         <- params$java_ver
+analysis_name    <- params$analysis_name
+run_GSEA         <- params$runGSEA
+gsea_directories <- list.files(path    = file.path(getwd(), "data"),
+                               pattern = paste0("^",
+                                                analysis_name,
+                                                "\\.GseaPreranked"))
+
+if (length(gsea_directories) == 0)
+  run_GSEA <- TRUE
+
+GSEA_params <- paste("-gmx",            gmt_file_path,
+                     "-rnk",            rnk_file,
+                     "-collapse",       "false",
+                     "-nperm",          "1000",                       # max 1000
+                     "-scoring_scheme", "weighted",
+                     "-rpt_label",      analysis_name,
+                     "-plot_top_x",     "20",
+                     "-rnd_seed",       "202141",
+                     "-set_max",        "1000",         # same size limit as ORA
+                     "-set_min",        "1",
+                     "-zip_report",     "false",
+                     "-out",            file.path(getwd(), "data"),
+                     "> gsea_output.txt",
+                     sep = " ")
+```
+
+Run GSEA from command line:
+```{r, message=FALSE, warning=FALSE}
+if (java_ver == "11" && run_GSEA){
+  command <- paste("", gsea_jar, "GSEAPreRanked", GSEA_params, sep = " ")
+  system(command)
+} else if (run_GSEA) {
+  command <- paste("java", "-Xmx1G",
+                   "-cp", gsea_jar, "xtools.gsea.GseaPreranked",
+                   GSEA_params, sep = " ")
+  system(command)
+}
+```
+
+Get the directory containing GSEA output results:
+```{r}
+gsea_directories <- list.files(path    = file.path(getwd(), "data"),
+                               pattern = paste0("^",
+                                                analysis_name,
+                                                "\\.GseaPreranked"))
+# Get info of GSEA directories
+gsea_dir_info <- file.info(file.path(getwd(), "data", gsea_directories))
+# Order from latest to oldest
+gsea_dir_info <- gsea_dir_info[with(gsea_dir_info,
+                                    order(as.POSIXct(mtime),
+                                          decreasing = TRUE)), ]
+
+gsea_result_dir <- row.names(gsea_dir_info)[1]     # Use the latest GSEA output result
+```
+
+
+## Interpret GSEA Result
+
+***What method did you use? What genesets did you use? Make sure to specify versions and cite your methods.***
+
+The command line tool of Gene Set Enrichment Analysis (GSEA)[@gsea], version 4.1.0, was used to perform this non-thresholded gene set enrichment analysis. The enrichment analysis we ran was GSEA pre-ranked, as we have pre-ranked our gene list by their $\log{\FDR}$ values. The method used to perform the analysis from R was based on the [Enrichment Map Protocol](https://baderlab.github.io/Cytoscape_workflows/EnrichmentMapPipeline/index.html)[@em_pipeline] by Bader Lab. The geneset used for the analysis was Gene Ontology biological process (GO:BP), updated on March 1st, with inferred from electronic (IEA) annotations excluded, compiled by Bader Lab[@geneset].
+
+The minimum size of genesets for this analysis is 1, and the maximum is 1000; these two parameters are consistent with the thresholded ORA so that the results of these two analyses are comparable. The number of permutations was set to 1000, which is the maximum possible permutations for GSEA, because this will give us the most accurate test statistics (p-values, q-values/FDR's) possible.
+
+***Summarize your enrichment results.***
+
+### Overall Summary
+
+|       Statistics       |                  na_pos                  |                                      na_neg                                     |
+|:----------------------:|:----------------------------------------:|:-------------------------------------------------------------------------------:|
+|      up-regulated      |                   5994                   |                                      11503                                      |
+|       FDR < 0.25       |                    299                   |                                       1537                                      |
+| nominal p-value < 0.01 |                    314                   |                                       914                                       |
+| nominal p-value < 0.05 |                    659                   |                                       1950                                      |
+|   top geneset associated  | TRANSLATIONAL INITIATION GOBP GO:0006413 | HALLMARK_INTERFERON_ALPHA_RESPONSE MSIGDB_C2 HALLMARK_INTERFERON_ALPHA_RESPONSE |
+
+Note that **na_pos** refers to genes that are **up-regulated** in **healthy control (HC)**, or synonymously **down-regulated** in **COVID-19** patients; and **na_neg** refers to genes that are **down-regulated** in **healthy control (HC)**, or correspondently, **up-regulated** in **COVID-19** patients. This is because of the design of our model matrix: HC = 1 and COVID-19 = 0.
+
+### Top Genes
+
+|          GSEA Statistics          |      TRANSLATIONAL INITIATION GOBP GO:0006413      | HALLMARK_INTERFERON_ALPHA_RESPONSE MSIGDB_C2 HALLMARK_INTERFERON_ALPHA_RESPONSE |
+|:---------------------------------:|:--------------------------------------------------:|:-------------------------------------------------------------------------------:|
+|       Enrichment Score (ES)       |                      0.7147206                     |                                    -0.6752788                                   |
+| Normalized Enrichment Score (NES) |                      2.9827669                     |                                    -2.4945803                                   |
+|                FDR                |                         0.0                        |                                       0.0                                       |
+|          Nominal P Value          |                         0.0                        |                                       0.0                                       |
+|         Leading-edge Genes        |                         82                         |                                        80                                       |
+|              Top Gene             | EIF4B: Eukaryotic translation initiation factor 4B |                     EPSTI1: Epithelial stromal interaction 1                    |
+
+
+***How do these results compare to the results from the thresholded analysis in Assignment #2. Compare qualitatively. Is this a straight forward comparison? Why or why not?***
+
+It is not a straightforward comparison qualitatively.
+For the top geneset of the up-regulated genes and of the down-regulated genes, GSEA and thresholded ORA yielded highly similar results. Both analyses have **translational initiation** for the up-regulated genes in healthy control as the top geneset. The ORA result for the down-regulated genes in HC has interferon alpha signaling pathway as the top gene set in the query result of Reactome, and the GSEA result has interferon alpha response as its top gene set.
+
+
+# Cytoscape Visualisation
+
+## Intall Required Cytoscape Apps
+
+```{r, warning=FALSE, message=FALSE}
+# Cytoscape apps required
+cy_app <- c("clustermaker2",            # Clustermaker2, version 0.9.5 or higher
+            "autoannotate",              # AutoAnnotate, version 1.2.0 or higher
+            "wordcloud")                    # WordCloud, version 3.1.0 or higher
+hasEM  <- params$hasEM
+if (! hasEM) cy_app <- c(cy_app, "EnrichmentMap")  # EnrichmentMap 3.1.1 release
+# get Cytoscape version
+cy_ver <- unlist(
+    strsplit(
+        RCy3::cytoscapeVersionInfo()["cytoscapeVersion"], split = "\\."
+    )
+)
+if(length(cy_ver) == 3 &&
+   as.numeric(cy_ver[1] >= 3) &&
+   as.numeric(cy_ver[2] >= 7)) {
+    # vector to store install status of each app
+    install_responses <- vector(mode = "character", length = length(cy_app))
+    for(i in seq_along(cy_app)){
+        
+        install_command      <- paste0("apps install app=\"",
+                                       cy_app[i],
+                                       "\"")
+        install_response     <- RCy3::commandsGET(install_command)
+        install_responses[i] <- install_response
+    }
+
+    install_summary <- data.frame(name   = cy_app, 
+                                       status = install_responses)
+    knitr::kable(list(install_summary),
+                 booktabs = TRUE,
+                 caption  = 'Summary of Automated App Installation'
+    )
+}
+```
+
+## Initialise Cytoscape Command
+```{r, warning=FALSE, message=FALSE}
+pvalue_gsea_threshold <- params$pval_thresh 
+qvalue_gsea_threshold <- params$fdr_thresh
+similarity_coe_type   <- "COMBINED"
+similarity_coe_cutoff <- "0.375"       # default cutoff for combined coefficient
+cur_model_name        <- analysis_name
+gsea_results_path     <- file.path(gsea_result_dir, "edb")
+gsea_results_fname    <- file.path(gsea_results_path, "results.edb")
+gene_expr_file        <- file.path(getwd(), "data", "Covid19_vs_HC_expr.txt")
+gsea_rnk_file         <- file.path(gsea_results_path,
+                                   list.files(gsea_results_path,
+                                              pattern=".rnk$"))
+```
+
+Loading helper functions to map docker file paths to the file paths in the local host machine:
+```{r, warning=FALSE, message=FALSE}
+source("./utils/docker_to_host.R", local = knitr::knit_global())
+```
+
+Map docker file paths to the actual local host machine:
+```{r}
+isDocker         <- params$isDocker
+if (isDocker) {
+  isWindows        <- params$isWindows               # Map to MS-DOS file system
+  host_machine_dir <- params$host_machine_dir     # local host machine directory
+  if (isWindows) {
+    gmt_file_path      <- docker_to_dos(gmt_file_path, host_machine_dir)
+    gsea_results_path  <- docker_to_dos(gsea_results_path, host_machine_dir)
+    gsea_results_fname <- docker_to_dos(gsea_results_fname, host_machine_dir)
+    gsea_rnk_file      <- docker_to_dos(gsea_rnk_file, host_machine_dir)
+    gene_expr_file     <- docker_to_dos(gene_expr_file, host_machine_dir)
+  } else {
+    isBetaEM <- params$isBetaEM    # if using EnrichmentMap 3.3.2 Beta or higher
+    if (isBetaEM) {
+      gmt_file_path      <- docker_to_em(gmt_file_path)
+      gsea_results_path  <- docker_to_em(gsea_results_path)
+      gsea_results_fname <- docker_to_em(gsea_results_fname)
+      gsea_rnk_file      <- docker_to_em(gsea_rnk_file)
+      gene_expr_file     <- docker_to_em(gene_expr_file)
+    } else {
+      gmt_file_path      <- docker_to_unix(gmt_file_path, host_machine_dir)
+      gsea_results_path  <- docker_to_unix(gsea_results_path, host_machine_dir)
+      gsea_results_fname <- docker_to_unix(gsea_results_fname, host_machine_dir)
+      gsea_rnk_file      <- docker_to_unix(gsea_rnk_file, host_machine_dir)
+      gene_expr_file     <- docker_to_unix(gene_expr_file, host_machine_dir)
+    }
+  }
+}
+```
+
+## Cytoscape Command to Build EM Network
+```{r}
+cur_network_name <- paste(analysis_name,
+                          pvalue_gsea_threshold,
+                          qvalue_gsea_threshold,
+                          sep = "_")
+em_command <- paste('enrichmentmap build',
+                    'analysisType=',        '"gsea"',
+                    'networkName=',         paste0('"', cur_network_name, '"'),
+                    'gmtFile=',             gmt_file_path,
+                    'pvalue=',              pvalue_gsea_threshold, 
+                    'qvalue=',              qvalue_gsea_threshold,
+                    'similaritycutoff=',    similarity_coe_cutoff,
+                    'coefficients=',        similarity_coe_type,
+                    'ranksDataset1=',       gsea_rnk_file,
+                    'enrichmentsDataset1=', gsea_results_fname, 
+                    'filterByExpressions=', 'false',
+                    sep = " ")
+```
+
+## Build a Network
+```{r}
+em_response <- RCy3::commandsGET(em_command)
+cur_suid <- 0
+
+if (grepl(pattern = "Failed", em_response)){
+    message(response)
+} else {
+    cur_suid <- em_response
+}
+
+cur_network_names <- RCy3::getNetworkList()
+
+if (cur_network_name %in% cur_network_names) {
+    cur_network_name <- paste(cur_suid, cur_network_name, sep = "_")
+}
+
+em_response <- RCy3::renameNetwork(title   = cur_network_name,
+                                   network = as.numeric(cur_suid))
+```
+
+screenshot prior to manual layout:
+
+```{r, warning=FALSE, message=FALSE}
+# zoom network view to maximize either height or width of current network window
+RCy3::layoutNetwork(layout.name = "force-directed",
+                    network     = as.numeric(cur_suid))
+RCy3::fitContent()
+if (isDocker) {
+    if (isWindows) {
+        get_em_win(title     = "Initial Screenshot network",
+                   host_dir  = host_machine_dir,
+                   network   = cur_suid)
+    } else {
+        get_em_unix(title    = "Initial Screenshot network",
+                    host_dir = host_machine_dir,
+                    network  = cur_suid)
+    }
+} else {
+    get_em_view(title   = "Initial Screenshot network",
+                network = cur_suid)
+}
+```
+
+**How many nodes and how many edges in the resulting map? What thresholds were used to create this map?**
+
+```{r}
+knitr::kable(
+    data.frame(
+        Node = RCy3::getNodeCount(network = as.integer(cur_suid)),
+        Edge = RCy3::getEdgeCount(network = as.integer(cur_suid)),
+        "p-value threshold"               = pvalue_gsea_threshold,
+        "FDR threshold"                   = qvalue_gsea_threshold,
+        "Similarity Coefficient Type"     = similarity_coe_type,
+        "Similarity Coefficient Cut-off"  = similarity_coe_cutoff
+    )
+)
+```
+
+
+**Annotate your network - what parameters did you use to annotate the network. If you are using the default parameters make sure to list them as well.**
+
+We annotate the network using [AutoAnnotate](http://baderlab.org/Software/AutoAnnotate)[@autoannotate] with the default parameters.
+
+```{r}
+aa_command <- paste("autoannotate",             "annotate-clusterBoosted",
+                    "network=",                 cur_suid,
+                    "clusterAlgorithm=",        "MCL",
+                    "edgeWeightColumn=",        "EnrichmentMap::similarity_coefficient",
+                    "labelColumn=",             "EnrichmentMap::GS_DESCR",
+                    "maxWords=",                "3",
+                    "useClusterMaker=",         "true",
+                    "createSingletonClusters=", "false")
+aa_response <- RCy3::commandsRun(aa_command)
+```
+
+The parameters used for annotating the network:
+
+| **Parameter**          | **Value**                             |
+|:----------------------:|:-------------------------------------:|
+| Cluster Source         | clusterMaker2                         |
+| ClusterMaker Algorithm | MCL Cluster                           |
+| Edge Attribute         | EnrichmentMap::similarity_coefficient |
+| Label Maker            | WordCloud: Adjacent Words (default)   |
+| Max Words Per Label    | 3                                     |
+| Word Adjacent Bonus    | 8                                     |
+| Normalization Factor   | 0.5                                   |
+| Attribute Names        | EnrichmentMap::GS_DESCR               |
+| Display Style          | Clustered-Standard                    |
+| Max Words per Cloud    | 250                                   |
+| Cluster Cutoff         | 1.0                                   |
+| Min Word Occurrence    | 1                                     |
+
+Note that *GS_DESCR* refers to the gene set description specified in the second column of Bader Lab's gmt file.
+
+
+The automation process ends here as the following works require manual arrangement of the network.
+
+
+**Make a publication ready figure - include this figure with proper legends in your notebook.**
+
+```{r, echo=FALSE}
+htmltools::img(
+        src   = knitr::image_uri("./img/annotated_cluster.png"),
+        alt   = "Annotated Enrichment Map for GSEA Result on COVID-19 Genes",
+        style = "margin:0px auto;display:block"
+    )
+```
+
+Where the colour gradient indicates the normalised enrichment score (NES) of a gene set;
+the darker the red colour the higher the positive NES of a geneset is,
+and the darker the blue colour the lower the negative NES of a geneset is.
+
+Note that this figure is not created via Cytoscape automation process as the notebook is compiled;
+it is pre-made and has been manually arranged and annotated.
+
+**Collapse your network to a theme network. What are the major themes present in this analysis? Do they fit with the model? Are there any novel pathways or themes?**
+
+
+```{r, echo=FALSE}
+htmltools::img(
+        src   = knitr::image_uri("./img/cluster_theme.png"),
+        alt   = "Biological Themes of COVID-19 Genes",
+        style = "margin:0px auto;display:block"
+    )
+```
+
+The collapsed network has 164 themes.
+To identify the major biological themes in this network,
+I manually arranged the themes (collapsed nodes) and grouped them according to their biological similarities (e.g. functions, diseases, etc.).
+The 8 clusters of themes represent the following major categories of themes present in this network:
+1. Host immune response
+2. Lipid
+3. Ion transport
+4. Structural protein regulation
+5. Apotosis and proteolysis
+6. Nervous system
+7. DNA replication
+8. Cancer
+The remaining themes are either unclear or difficult to be categorized.
+Group 3 is not surprising since one of the COVID-19 signature genes identified by the original study by Thair et al. [@GSE152641] is **ACO1**, which is an iron-sulfur protein that regulates ferritin and transferrin. They also identified genes that are commonly studied in cancer in their COVID-19 specific genes; this explains the presence of themes in group 8. Themes in the lipid group are also expected as superfamily members of ATP-binding cassette transporters that facilitate the interaction of immune cells with various classes of lipids are identified in their signature set. The only group of themes that is not introduced in the paper is nervous system (group 7), which could be considered novel in this context.
+
+## Interpreting Network
+
+**Do the enrichment results support conclusions or mechanism discussed in the original paper? How do these results differ from the results you got from Assignment #2 thresholded methods**
+
+As shown in the collapsed theme network above,
+except for the themes related to nervous system and themes uncategorised,
+the majority of biological processes present in the enrichment map are consistent with
+the original paper.
+The difference between the GSEA result and the thresholded ORA is that,
+given the same p-value and FDR cut-off (0.05), and the maximum size limit of gene sets (1000),
+biological processes involving lipid and ion transport present in the significant gene sets of the GSEA result are absent in the significant gene sets of the ORA result,
+while some genes involved in these processes are identified to be part of the COVID-19 signature genes.
+This comparison shows how the thresholded ORA could miss relatively weaker signals.
+
+**Can you find evidence, i.e. publications, to support some of the results that you see. How does this evidence support your result?**
+
+Apart from the evidence we previously introduced for the thresholded ORA result,
+and the evidence provided by the original paper regarding the presence of
+biological themes of ion transport, lipid, and cancer,
+there indeed exists supporting evidence for the biological themes of the nervous system,
+which was not mentioned in the original paper.
+Tremblay ME et al. discovered that SARS-CoV-2 infection leads to loss of physiological functions of the astrocytes and microglia, which contribute to the autoimmunity of central nervous system.[@astrocytes]
+This coincides with the presence of theme **astrocyte neuroinflammation microglia**
+in group 6:
+
+```{r, echo=FALSE}
+htmltools::img(
+        src   = knitr::image_uri("./img/astrocyte_microglial.png"),
+        alt   = "Astrocyte Neuroinflammation Microglia",
+        style = "margin:0px auto;display:block"
+    )
+```
+
+
+Specifically, Tremblay ME et al. found that sysmetic infection caused by COVID-19
+triggers considerable increase in circulating levels of **chemokines** and interleukins,
+which compromise the blood-brain barrier,
+enter the brain parenchyma and affect astrocytes and microglia.[@astrocytes]
+This is relatable to the original study by Thair et al..
+**ATL3**, which is one of the most significant COVID-19 signature gene identified in the study,
+is found to be down-regulated in COVID-19 patients.
+ATL3 is a member of the integral membrane GTPases that proper formation of ER tubules relies on.
+Down-regulated ATL3 leads to delayed cargo exit and coat assembly for budding from the ER,
+which is necessary for export of chemokines in response to the infection.[@GSE152641]
+This suggests a link between astrocytes and microglia damaged by COVID-19 infection
+and the expression level of the signature gene **ATL3**.
+
+# Post Analysis: Drug target
+
+Since we have biological themes in abundance,
+we will continue exploring the main network and ignore the dark matters this time.
+
+## Download Signature Set: Drug Target
+
+```{r, warning=FALSE, message=FALSE}
+sig_url   <- "http://download.baderlab.org/EM_Genesets/current_release/Human/symbol/DrugTargets/"
+# list all the files on the server
+filenames <- RCurl::getURL(sig_url)
+tc        <- textConnection(filenames)
+contents  <- readLines(tc)
+close(tc)
+# get the gmt that has all the pathways and excludes terms inferred from
+# electronic annotations(IEA) start with gmt file that has pathways only
+rx <- gregexpr("(?<=<a href=\")(.*.DrugBank_approved.*.)(.gmt)(?=\">)",
+               contents, 
+               perl = TRUE)
+sig_fname      <- unlist(regmatches(contents, rx))
+sig_file_path  <- file.path(getwd(), "data", sig_fname)
+if (!file.exists(sig_file_path)) # Download the latest genesets if not existed
+    download.file(paste(sig_url, sig_fname, sep = ""), destfile = sig_file_path)
+```
+
+## Known Signatures
+While there currently exist very few treatment options, the original study by Thair et al.[@GSE152641] also attempted to repurpose approved drugs that have passed the safety trials through examining the overlap of the host response to the novel COVID-19 and the other six viruses that have been better studied.
+
+
+One drug repurposed in the original paper is **peginterferon alfa-2a**.
+Although pathways of type I interferon activity are present in both of the GSEA and the thresholded ORA results for genes up-regulated in COVID-19 patients,
+Hadjadj et al.[@Hadjadj718] discovered impaired type I interferon activity
+in severe and critical COVID-19 patients.
+Hadjadj et al. also noticed this variability in type I IFN responses to infection,
+suggesting the virus has mechanisms to disable host IFN production;
+the mechanisms per se and the timing of when the mechanisms are triggered are yet to be investigated.
+This discrepancy of these two studies could come from the fact that the original study did not
+take into account the severity of the disease,
+and the whole blood for RNA-seq was collected from the biological replicates
+admitted to the hospital within 24 hours.
+As this drug facilitates type I IFN responses,
+adding this drug into our signature gene set might hopefully reveal potential pathways
+that could be related to the mechanisms.
+
+| **Drug**              | **Test**                      | **test statistics** |
+|:---------------------:|:-----------------------------:|:-------------------:|
+| Peginterferon alfa-2a | Mann–Whitney (One-sided Less) | 0.0775              |
+
+We choose the left-tail Mann-Whitney test,
+since our model is relative to HC
+and stronger type I INF response was found in our COVID-19 samples.
+
+### Result
+
+Themes that interact with peginterferon alfa-2a
+```{r, echo=FALSE}
+htmltools::img(
+        src   = knitr::image_uri("./img/peginterferon_alfa_2a_theme.png"),
+        alt   = "Peginterferon alfa-2a interaction with Themes of COVID-19 Genes",
+        style = "margin:0px auto;display:block"
+    )
+```
+
+Pathways / biological processes in which peginterferon alfa-2a is involved:
+```{r, echo=FALSE}
+htmltools::img(
+        src   = knitr::image_uri("./img/peginterferon_alfa_2a_bp.png"),
+        alt   = "Peginterferon alfa-2a interaction with Pathways",
+        style = "margin:0px auto;display:block"
+    )
+```
+
+
+Only common pathways/processes in the innate immune system show up in the network;
+this drug does not reveal novel pathways that allow us to investigate the unknown mechanism.
+
+
+## Top Drug
+
+The top drug that turned up in the left-tail Mann-Whitney test is **fostamatinib**:
+
+| **Drug**     | **Test**                      | **test statistics** |
+|:------------:|:-----------------------------:|:-------------------:|
+| Fostamatinib | Mann–Whitney (One-sided Less) | 1.1223e-5           |
+
+Themes that interact with fostamatinib:
+```{r, echo=FALSE}
+htmltools::img(
+        src   = knitr::image_uri("./img/fostamatinib_theme.png"),
+        alt   = "Fostamatinib interaction with Themes",
+        style = "margin:0px auto;display:block"
+    )
+```
+
+
+Pathways / biological processes in which fostamatinib participates
+```{r, echo=FALSE}
+htmltools::img(
+        src   = knitr::image_uri("./img/fostamatinib_bp.png"),
+        alt   = "Fostamatinib interaction with Pathways",
+        style = "margin:0px auto;display:block"
+    )
+```
+
+
+Fostamatinib has been recently repurposed by JR Strich et al. as a potential treatment option for COVID-19.[@fostamatinib]
+Although fostamatinib has been in Phase II trial for its use in treating hospitalised COVID-19 patients,
+there are currently very few studies available on its mechanisms against the viral infection.
+Further analyses of this enrichment map annotated by the signature gene set of fostamatinib
+might reveal more insights into the mechanisms.
+
+# Reference
