@@ -15,6 +15,8 @@ The html doesn't render in github...you might need to download it to view the co
 
 ## Assignment 3
 
+[A3 Compiled html](https://raw.githubusercontent.com/bcb420-2021/Feifei_Li/main/A3_Feifei_Li.html)
+
 ### Before compiling the notebook...
 
 1. In the directory where you pull the repository, execute the following command in os shell:
